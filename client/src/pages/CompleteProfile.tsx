@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
-import { Briefcase, MapPin, FileText, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Briefcase, MapPin, FileText, Loader2, CheckCircle, AlertTriangle, Clock } from 'lucide-react';
 
 interface Category {
   id: string;
@@ -18,31 +18,64 @@ const CompleteProfile: React.FC = () => {
     bio: '',
     locationCity: '',
     locationRegion: '',
+    availabilityNotes: '',
   });
+  const [certifications, setCertifications] = useState<string[]>([]);
+  const [newCert, setNewCert] = useState('');
+  
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Pre-cargar datos si ya existen (caso de REJECTED)
-    if (user?.providerProfile) {
-      // Necesitaríamos obtener los datos completos del perfil si no están en el context
-      // Por ahora, solo permitimos que el usuario vuelva a llenar el form
-    }
-
     const fetchCategories = async () => {
       try {
+        console.log('Fetching categories...');
         const response = await api.get('/categories');
-        setCategories(response.data.categories || []);
-      } catch (err) {
-        setError('Error al cargar categorías');
+        console.log('Categories response:', response.data);
+        const fetchedCategories = response.data.categories || [];
+        // Map to ensure 'name' property exists if API returns nameEs/nameEn
+        const normalizedCategories = fetchedCategories.map((cat: any) => ({
+          id: cat.id,
+          name: cat.name || cat.nameEs || cat.nameEn || 'Sin nombre',
+        }));
+        setCategories(normalizedCategories);
+      } catch (err: any) {
+        console.error('Error fetching categories:', err);
+        setError('Error al cargar categorías: ' + (err.response?.data?.message || err.message));
       } finally {
         setFetching(false);
       }
     };
     fetchCategories();
+  }, []);
+
+  // Pre-cargar datos si ya existen
+  useEffect(() => {
+    if (user?.providerProfile) {
+      const profile = user.providerProfile;
+      setFormData({
+        serviceCategoryId: profile.serviceCategoryId || '',
+        bio: profile.bio || '',
+        locationCity: profile.locationCity || '',
+        locationRegion: profile.locationRegion || '',
+        availabilityNotes: profile.availabilityNotes || '',
+      });
+      setCertifications(profile.certifications || []);
+    }
   }, [user]);
+
+  const addCert = () => {
+    if (newCert.trim() && !certifications.includes(newCert.trim())) {
+      setCertifications([...certifications, newCert.trim()]);
+      setNewCert('');
+    }
+  };
+
+  const removeCert = (index: number) => {
+    setCertifications(certifications.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,9 +88,12 @@ const CompleteProfile: React.FC = () => {
     setError('');
 
     try {
-      await api.post('/providers/register', formData);
-      await checkAuth(); // Crucial: Actualizar el estado global del usuario
-      navigate('/'); // Redirigir a Home, que ahora mostrará el estado PENDING
+      await api.post('/providers/register', {
+        ...formData,
+        certifications,
+      });
+      await checkAuth(); 
+      navigate('/'); 
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al guardar el perfil. Intenta de nuevo.');
     } finally {
@@ -99,7 +135,7 @@ const CompleteProfile: React.FC = () => {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
               <Briefcase className="h-4 w-4 mr-2 text-indigo-500" />
-              ¿Qué servicio ofreces?
+              ¿Qué servicio principal ofreces?
             </label>
             <select
               required
@@ -107,13 +143,54 @@ const CompleteProfile: React.FC = () => {
               value={formData.serviceCategoryId}
               onChange={(e) => setFormData({ ...formData, serviceCategoryId: e.target.value })}
             >
-              <option value="">Selecciona una especialidad...</option>
+              <option value="">Selecciona tu categoría...</option>
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+              <CheckCircle className="h-4 w-4 mr-2 text-indigo-500" />
+              Especialidades / Certificaciones
+            </label>
+            <div className="flex space-x-2 mb-2">
+              <input
+                type="text"
+                className="flex-1 px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                placeholder="Ej: Gasista Matriculado"
+                value={newCert}
+                onChange={(e) => setNewCert(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCert())}
+              />
+              <button
+                type="button"
+                onClick={addCert}
+                className="px-4 py-2 bg-indigo-100 text-indigo-700 font-bold rounded-xl hover:bg-indigo-200 transition-colors"
+              >
+                Añadir
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {certifications.map((cert, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-medium border border-indigo-100"
+                >
+                  {cert}
+                  <button
+                    type="button"
+                    onClick={() => removeCert(index)}
+                    className="ml-2 text-indigo-400 hover:text-indigo-600 font-bold"
+                  >
+                    &times;
+                  </button>
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -156,9 +233,23 @@ const CompleteProfile: React.FC = () => {
               required
               rows={4}
               className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-              placeholder="Describe tus años de experiencia, especialidades y por qué los clientes deberían elegirte..."
+              placeholder="Describe tus años de experiencia y por qué los clientes deberían elegirte..."
               value={formData.bio}
               onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+              <Clock className="h-4 w-4 mr-2 text-indigo-500" />
+              Notas de Disponibilidad (Opcional)
+            </label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              placeholder="Ej: Lun-Vie 9:00 a 18:00, emergencias 24h"
+              value={formData.availabilityNotes}
+              onChange={(e) => setFormData({ ...formData, availabilityNotes: e.target.value })}
             />
           </div>
 
@@ -178,7 +269,7 @@ const CompleteProfile: React.FC = () => {
             ) : (
               <>
                 <CheckCircle className="h-5 w-5 mr-2" />
-                Re-enviar Solicitud de Aprobación
+                {user?.providerProfile ? 'Actualizar y Re-enviar Perfil' : 'Enviar Solicitud de Aprobación'}
               </>
             )}
           </button>

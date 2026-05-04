@@ -52,6 +52,8 @@ export class ProviderService {
             bio: input.bio,
             locationCity: input.locationCity,
             locationRegion: input.locationRegion,
+            certifications: input.certifications || [],
+            availabilityNotes: input.availabilityNotes,
             status: ProviderStatus.PENDING,
             rejectionReason: null,
           },

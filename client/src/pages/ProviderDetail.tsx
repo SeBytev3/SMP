@@ -12,6 +12,7 @@ import {
   MessageCircle,
   Send,
   CheckCircle2,
+  Clock,
 } from 'lucide-react';
 
 interface ProviderProfile {
@@ -20,6 +21,8 @@ interface ProviderProfile {
   bio: string;
   locationCity: string;
   locationRegion: string;
+  certifications: string[];
+  availabilityNotes?: string;
   averageRating: string;
   totalReviews: number;
   user: {
@@ -148,11 +151,37 @@ const ProviderDetail: React.FC = () => {
                   <h3 className="text-lg font-bold text-gray-900 mb-2">Sobre mí</h3>
                   <p className="text-gray-600 leading-relaxed italic">"{provider.bio}"</p>
                 </div>
-                <div className="flex items-center text-gray-500 bg-gray-50 p-4 rounded-2xl w-fit">
-                  <MapPin className="h-5 w-5 mr-2 text-indigo-500" />
-                  <span className="font-medium">
-                    {provider.locationCity}, {provider.locationRegion}
-                  </span>
+
+                {provider.certifications && provider.certifications.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">Especialidades / Certificaciones</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {provider.certifications.map((cert, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold border border-indigo-100"
+                        >
+                          {cert}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex items-center text-gray-500 bg-gray-50 p-4 rounded-2xl w-fit">
+                    <MapPin className="h-5 w-5 mr-2 text-indigo-500" />
+                    <span className="font-medium">
+                      {provider.locationCity}, {provider.locationRegion}
+                    </span>
+                  </div>
+                  
+                  {provider.availabilityNotes && (
+                    <div className="flex items-center text-gray-500 bg-gray-50 p-4 rounded-2xl w-fit">
+                      <Clock className="h-5 w-5 mr-2 text-indigo-500" />
+                      <span className="font-medium">{provider.availabilityNotes}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

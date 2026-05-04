@@ -1,19 +1,19 @@
 # Builder stage
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
+
+# Enable corepack and use latest npm
+RUN corepack enable && corepack prepare npm@11.13.0 --activate && npm install -g npm@11.13.0
 
 # Install system dependencies
 RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-# Enable corepack and use latest npm
-RUN corepack enable && corepack prepare npm@11.13.0 --activate
-
 # Copy package files
 COPY package*.json ./
 
 # Install all dependencies
-RUN npm install
+RUN npm install --loglevel error
 
 # Copy source code and config files
 COPY . .
@@ -21,18 +21,16 @@ COPY . .
 # Build React application
 RUN npm run build
 
-# Production stage (using a lightweight server or just node for dev)
-# For a real production React app, Nginx is better, but to maintain 
-# parity with the server's node-based approach and dev workflow:
-FROM node:22-alpine
+# Production stage
+FROM node:24-alpine
+
+# Enable corepack and use latest npm
+RUN corepack enable && corepack prepare npm@11.13.0 --activate && npm install -g npm@11.13.0
 
 WORKDIR /app
 
 # Create a non-root user and group
 RUN addgroup -S nodejs && adduser -S vitejs -G nodejs
-
-# Enable corepack and use latest npm
-RUN corepack enable && corepack prepare npm@11.13.0 --activate
 
 # Copy necessary files from builder
 COPY --from=builder /app/package*.json ./
