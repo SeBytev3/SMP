@@ -118,8 +118,8 @@ model ProviderPortfolio {
 
 model ServiceCategory {
   id            String   @id @default(uuid())
-  nameEs        String   @map("name_es")
-  nameEn        String   @map("name_en")
+  nameEs        String   @unique @map("name_es")
+  nameEn        String   @unique @map("name_en")
   descriptionEs String?  @map("description_es") @db.Text
   descriptionEn String?  @map("description_en") @db.Text
   isActive      Boolean  @default(true) @map("is_active")

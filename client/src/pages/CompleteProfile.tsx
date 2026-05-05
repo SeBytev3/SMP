@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
+import { COLOMBIAN_DATA } from '../data/colombia';
 import { Briefcase, MapPin, FileText, Loader2, CheckCircle, AlertTriangle, Clock } from 'lucide-react';
 
 interface Category {
@@ -27,6 +28,10 @@ const CompleteProfile: React.FC = () => {
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  // Find cities for the selected department
+  const selectedDept = COLOMBIAN_DATA.find(d => d.name === formData.locationRegion);
+  const cities = selectedDept ? selectedDept.cities : [];
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -66,6 +71,14 @@ const CompleteProfile: React.FC = () => {
     }
   }, [user]);
 
+  const handleDeptChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFormData({ 
+      ...formData, 
+      locationRegion: e.target.value,
+      locationCity: '' // Reset city when department changes
+    });
+  };
+
   const addCert = () => {
     if (newCert.trim() && !certifications.includes(newCert.trim())) {
       setCertifications([...certifications, newCert.trim()]);
@@ -84,6 +97,16 @@ const CompleteProfile: React.FC = () => {
       return;
     }
 
+    if (!formData.locationRegion) {
+      setError('Por favor selecciona un departamento');
+      return;
+    }
+
+    if (!formData.locationCity) {
+      setError('Por favor selecciona una ciudad');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -95,7 +118,13 @@ const CompleteProfile: React.FC = () => {
       await checkAuth(); 
       navigate('/'); 
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al guardar el perfil. Intenta de nuevo.');
+      const serverError = err.response?.data?.error;
+      if (serverError?.details && Array.isArray(serverError.details)) {
+        const detailMsgs = serverError.details.map((d: any) => d.message).join('. ');
+        setError(`${serverError.message}: ${detailMsgs}`);
+      } else {
+        setError(serverError?.message || err.response?.data?.message || 'Error al guardar el perfil. Intenta de nuevo.');
+      }
     } finally {
       setLoading(false);
     }
@@ -197,30 +226,41 @@ const CompleteProfile: React.FC = () => {
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
                 <MapPin className="h-4 w-4 mr-2 text-indigo-500" />
-                Ciudad
+                Departamento
               </label>
-              <input
-                type="text"
+              <select
                 required
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                placeholder="Ej: Buenos Aires"
-                value={formData.locationCity}
-                onChange={(e) => setFormData({ ...formData, locationCity: e.target.value })}
-              />
+                value={formData.locationRegion}
+                onChange={handleDeptChange}
+              >
+                <option value="">Selecciona...</option>
+                {COLOMBIAN_DATA.map((dept) => (
+                  <option key={dept.name} value={dept.name}>
+                    {dept.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
                 <MapPin className="h-4 w-4 mr-2 text-indigo-500" />
-                Región/Estado
+                Ciudad
               </label>
-              <input
-                type="text"
+              <select
                 required
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                placeholder="Ej: CABA"
-                value={formData.locationRegion}
-                onChange={(e) => setFormData({ ...formData, locationRegion: e.target.value })}
-              />
+                disabled={!formData.locationRegion}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all disabled:bg-gray-50 disabled:text-gray-400"
+                value={formData.locationCity}
+                onChange={(e) => setFormData({ ...formData, locationCity: e.target.value })}
+              >
+                <option value="">Selecciona ciudad...</option>
+                {cities.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

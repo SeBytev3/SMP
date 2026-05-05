@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, UserRole, ProviderStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as dotenv from 'dotenv';
 import prisma from '../src/config/database';
@@ -8,26 +8,12 @@ dotenv.config();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Create admin user
-  const adminPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'Admin@123456', 12);
+  const defaultPassword = 'Prueba123*';
+  const saltRounds = 12;
+  const hashedPassword = await bcrypt.hash(defaultPassword, saltRounds);
 
-  const admin = await prisma.user.upsert({
-    where: { email: process.env.ADMIN_EMAIL || 'admin@servicesmarketplace.com' },
-    update: {},
-    create: {
-      email: process.env.ADMIN_EMAIL || 'admin@servicesmarketplace.com',
-      passwordHash: adminPassword,
-      firstName: 'Admin',
-      lastName: 'User',
-      role: 'ADMIN',
-      languagePref: 'es',
-    },
-  });
-
-  console.log(`✅ Admin user created: ${admin.email}`);
-
-  // Create default service categories
-  const categories = [
+  // 1. Create default service categories
+  const categoriesData = [
     {
       nameEs: 'Plomero',
       nameEn: 'Plumber',
@@ -48,26 +34,127 @@ async function main() {
     },
   ];
 
-  for (const category of categories) {
+  const categories: Record<string, any> = {};
+  for (const cat of categoriesData) {
     const created = await prisma.serviceCategory.upsert({
-      where: { id: 'placeholder-id' }, // We'll use a trick or delete first
-      update: {},
-      create: category,
+      where: { id: cat.nameEs === 'Plomero' ? 'cat-plumber' : cat.nameEs === 'Electricista' ? 'cat-electrician' : 'cat-locksmith' },
+      update: cat,
+      create: {
+        id: cat.nameEs === 'Plomero' ? 'cat-plumber' : cat.nameEs === 'Electricista' ? 'cat-electrician' : 'cat-locksmith',
+        ...cat
+      },
     });
-    // Actually, since there's no unique constraint on nameEs in the schema yet, 
-    // I'll manually check for existence first to be safe without schema changes.
-    const existing = await prisma.serviceCategory.findFirst({
-      where: { nameEs: category.nameEs }
+    categories[cat.nameEs] = created;
+    console.log(`✅ Category ensured: ${cat.nameEs}`);
+  }
+
+  // 2. Create Admin
+  await prisma.user.upsert({
+    where: { email: 'admin@marketplace.com' },
+    update: { passwordHash: hashedPassword },
+    create: {
+      email: 'admin@marketplace.com',
+      passwordHash: hashedPassword,
+      firstName: 'Admin',
+      lastName: 'User',
+      role: UserRole.ADMIN,
+      languagePref: 'es',
+    },
+  });
+  console.log('✅ Admin user ensured: admin@marketplace.com');
+
+  // 3. Create Customers
+  const customers = [
+    { email: 'cguzman@gmail.com', firstName: 'Cristian', lastName: 'Guzman' },
+    { email: 'stefa@gmail.com', firstName: 'Stefania', lastName: 'Ceron' },
+    { email: 'jajajeje@gmail.com', firstName: 'Jaja', lastName: 'Jeje' },
+  ];
+
+  for (const customer of customers) {
+    await prisma.user.upsert({
+      where: { email: customer.email },
+      update: { passwordHash: hashedPassword },
+      create: {
+        ...customer,
+        passwordHash: hashedPassword,
+        role: UserRole.CUSTOMER,
+        languagePref: 'es',
+      },
+    });
+    console.log(`✅ Customer ensured: ${customer.email}`);
+  }
+
+  // 4. Create Providers and Profiles
+  const providers = [
+    {
+      email: 'sebesp@gmail.com',
+      firstName: 'Sebastian',
+      lastName: 'Espinosa',
+      category: 'Electricista',
+      profile: {
+        bio: 'Tengo la chispa que necesita tu corazón',
+        locationCity: 'Cali',
+        locationRegion: 'Valle del Cauca',
+        availabilityNotes: '24h',
+        status: ProviderStatus.APPROVED,
+      }
+    },
+    {
+      email: 'brandon@gmail.com',
+      firstName: 'Brandon',
+      lastName: 'Ayala',
+      category: 'Plomero',
+      profile: {
+        bio: 'Se todo sobre tubos',
+        locationCity: 'Cali',
+        locationRegion: 'Valle del Cauca',
+        certifications: ['Plomerista'],
+        availabilityNotes: '24h',
+        status: ProviderStatus.APPROVED,
+      }
+    },
+    {
+      email: 'isalamasbella@gmail.com',
+      firstName: 'Isa',
+      lastName: 'Bella',
+      category: 'Cerrajero',
+      profile: {
+        bio: 'Muchos años de experiencia abriendola',
+        locationCity: 'Trujillo',
+        locationRegion: 'Valle del Cauca',
+        availabilityNotes: '24h',
+        status: ProviderStatus.APPROVED,
+      }
+    },
+  ];
+
+  for (const p of providers) {
+    const user = await prisma.user.upsert({
+      where: { email: p.email },
+      update: { passwordHash: hashedPassword },
+      create: {
+        email: p.email,
+        firstName: p.firstName,
+        lastName: p.lastName,
+        passwordHash: hashedPassword,
+        role: UserRole.PROVIDER,
+        languagePref: 'es',
+      },
     });
 
-    if (!existing) {
-      const created = await prisma.serviceCategory.create({
-        data: category,
-      });
-      console.log(`✅ Category created: ${category.nameEs} / ${category.nameEn} (ID: ${created.id})`);
-    } else {
-      console.log(`ℹ️ Category already exists: ${category.nameEs}`);
-    }
+    await prisma.providerProfile.upsert({
+      where: { userId: user.id },
+      update: {
+        ...p.profile,
+        serviceCategoryId: categories[p.category].id,
+      },
+      create: {
+        ...p.profile,
+        userId: user.id,
+        serviceCategoryId: categories[p.category].id,
+      },
+    });
+    console.log(`✅ Provider ensured: ${p.email}`);
   }
 
   console.log('🎉 Database seeding completed successfully!');

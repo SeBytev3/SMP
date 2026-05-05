@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const registerProviderSchema = z.object({
   body: z.object({
-    serviceCategoryId: z.string().uuid('Invalid category ID'),
+    serviceCategoryId: z.string().min(1, 'Category ID is required'),
     bio: z.string().max(2000).optional(),
     locationCity: z.string().max(100).optional(),
     locationRegion: z.string().max(100).optional(),
@@ -18,7 +18,7 @@ export const updateProviderSchema = z.object({
     id: z.string().uuid(),
   }),
   body: z.object({
-    serviceCategoryId: z.string().uuid('Invalid category ID').optional(),
+    serviceCategoryId: z.string().min(1, 'Category ID is required').optional(),
     bio: z.string().max(2000).optional(),
     locationCity: z.string().max(100).optional(),
     locationRegion: z.string().max(100).optional(),
@@ -31,7 +31,7 @@ export const updateProviderSchema = z.object({
 
 export const searchProvidersSchema = z.object({
   query: z.object({
-    categoryId: z.string().uuid('Invalid category ID').optional(),
+    categoryId: z.string().min(1).optional(),
     city: z.string().max(100).optional(),
     minRating: z.coerce.number().min(0).max(5).optional(),
     sort: z.enum(['rating', 'recent']).optional().default('recent'),

@@ -2,7 +2,79 @@
 
 A bilingual web platform connecting service providers (plumbers, electricians, locksmiths) with customers who need their services, featuring admin-approved provider registrations, rich provider profiles, in-app messaging, and a commission-based business model.
 
-## Quick Start
+## Software Architecture
+
+The Services Marketplace Platform (SMP) follows a **Monorepo** structure, housing both the frontend and backend in a single repository for simplified dependency management and shared context.
+
+### Architectural Style: Layered Monolith
+
+The system is designed as a **Layered Monolith**. This choice balances development speed with structural clarity, allowing for a clean separation of concerns without the operational complexity of microservices.
+
+- **Frontend (Client):** A Single Page Application (SPA) built with React and TypeScript, focused on providing a responsive, bilingual user experience.
+- **Backend (Server):** A Node.js/Express API that manages business logic, authentication, and data persistence.
+- **Database:** A relational PostgreSQL database managed via Prisma ORM to ensure data integrity and type safety.
+
+### Why this Architecture?
+
+1.  **Simplicity & Speed:** For the current scale, a monolith allows for faster iterations, easier testing (E2E flows), and straightforward deployment.
+2.  **Type Safety:** Using TypeScript across the entire stack (React + Node.js + Prisma) minimizes runtime errors and improves developer productivity.
+3.  **Scalability:** The layered approach (Routes -> Controllers -> Services -> Prisma) makes it easy to split specific domains into microservices in the future if needed.
+4.  **Consistency:** A single repository ensures that API changes and frontend updates stay in sync.
+
+### Diagrams (C4 Model)
+
+#### 1. System Context Diagram
+Describes how users interact with the platform.
+
+```mermaid
+graph TD
+    Customer((Customer)) -->|Browse & Request| SMP[Services Marketplace]
+    Provider((Provider)) -->|Register & Manage| SMP
+    Admin((Admin)) -->|Approve & Moderate| SMP
+    SMP -->|Store Data| DB[(PostgreSQL)]
+```
+
+#### 2. Component Diagram (Backend)
+Describes the internal layers of the Server.
+
+```mermaid
+graph TD
+    Client[React Client] -->|HTTP/REST| Routes[Express Routes]
+    Routes --> Middleware[Auth & Validation Middleware]
+    Middleware --> Controllers[Controllers]
+    Controllers --> Services[Business Logic Services]
+    Services --> Prisma[Prisma ORM]
+    Prisma --> DB[(PostgreSQL)]
+```
+
+## Tech Stack
+
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, i18next (Bilingual).
+- **Backend:** Node.js 24, Express, TypeScript, Prisma ORM, JWT.
+- **Database:** PostgreSQL 14 (Dockerized).
+- **DevOps:** Docker, Docker Compose.
+
+## Quick Start (with Docker - Recommended)
+
+The entire platform can be launched with a single command. Ensure you have Docker and Docker Compose installed.
+
+```bash
+# Start all services (Database, Backend, Frontend)
+docker-compose up --build -d
+```
+
+Once running:
+- **Frontend:** http://localhost:5173
+- **Backend API:** http://localhost:4000
+- **API Docs:** http://localhost:4000/api-docs
+
+### Default Credentials
+All users share the password: `Prueba123*`
+- **Admin:** `admin@marketplace.com`
+- **Provider:** `sebesp@gmail.com`
+- **Customer:** `cguzman@gmail.com`
+
+## Manual Development Setup
 
 ```bash
 # Install dependencies
@@ -10,10 +82,6 @@ npm install
 
 # Start development servers (both backend and frontend)
 npm run dev
-
-# Or run individually
-npm run dev:server  # Backend API only
-npm run dev:client  # Frontend only
 ```
 
 ## Project Structure
