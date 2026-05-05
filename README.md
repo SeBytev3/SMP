@@ -49,10 +49,41 @@ graph TD
 
 ## Tech Stack
 
-- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, i18next (Bilingual).
+- **Frontend:** React 19, TypeScript, **Vite 6** (Build Tool & Dev Server), Tailwind CSS, i18next (Bilingual), React Router 7.
 - **Backend:** Node.js 24, Express, TypeScript, Prisma ORM, JWT.
 - **Database:** PostgreSQL 14 (Dockerized).
 - **DevOps:** Docker, Docker Compose.
+
+## Project Structure & Components
+
+The project is divided into two main services, coordinated via Docker Compose.
+
+### 🎨 Client (Frontend) - Powered by Vite 6
+Located in `/client`. It uses **Vite** for optimized building and extremely fast development (HMR).
+
+#### Key Components:
+- **`src/context/AuthContext.tsx`**: Manages the global authentication state, token persistence, and user sessions.
+- **`src/api/axios.ts`**: Configured Axios instance for API communication with automatic credential handling.
+- **`src/data/colombia.ts`**: Static data provider for Colombian departments and cities used in location selectors.
+- **`src/pages/`**:
+    - `Register.tsx`: User onboarding flow (Customer vs. Provider).
+    - `CompleteProfile.tsx`: Dynamic form for providers featuring Colombian location logic and category selection.
+    - `Login.tsx`: Secure entry point to the platform.
+    - `AdminDashboard.tsx`: Administrative interface for provider moderation.
+
+### ⚙️ Server (Backend) - Layered Architecture
+Located in `/server`. Follows a clean separation of concerns.
+
+#### Core Layers:
+- **Controllers**: Handle HTTP requests and response formatting (e.g., `provider.controller.ts`).
+- **Services**: Contain the core business logic and rules (e.g., `auth.service.ts`).
+- **Validators (Zod)**: Strict input validation and sanitization for all endpoints.
+- **Prisma Schema**: The single source of truth for the database structure.
+
+## Current Maturity Level
+Contrary to initial planning focusing only on the backend, the project has evolved into a **Full-Stack Functional Prototype**.
+- **Frontend:** Fully responsive, integrated with the API, and featuring complex business logic (Colombian localization, multi-step registration).
+- **Backend:** Production-ready authentication, robust data validation, and automated database seeding.
 
 ## Quick Start (with Docker - Recommended)
 
