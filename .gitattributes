@@ -1,3 +1,7 @@
 *.ts text eol=lf
 *.js text eol=lf
 *.json text eol=lf
+*.toml text eol=lf
+*.example text eol=lf
+*.md text eol=lf
+*.sql text eol=lf
