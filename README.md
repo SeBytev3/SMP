@@ -84,36 +84,18 @@ npm install
 npm run dev
 ```
 
-## Project Structure
-
-```
-services-marketplace/
-├── server/          # Backend API (Node.js + Express + PostgreSQL)
-├── client/          # Frontend application (React + TypeScript)
-├── plans/           # Project plans and specs
-└── package.json     # Root workspace configuration
-```
-
 ## Documentation
 
 - [SPEC.md](plans/0000-services-marketplace/SPEC.md) - Full specification document
-- [PLAN.md](plans/0000-services-marketplace/PLAN.md) - Implementation plan (Phase 1: Backend)
+- [PLAN.md](plans/0000-services-marketplace/PLAN.md) - Implementation plan
 
-## Tech Stack
+## Important Note before Starting
 
-**Backend (Phase 1)**:
-- Node.js 18+
-- Express.js
-- TypeScript
-- Prisma ORM
-- PostgreSQL
-- JWT Authentication
+Before running the project with Docker, you must create a `.env` file in the `server/` directory. You can use the provided example:
 
-**Frontend (Phase 2)**:
-- React 18+
-- TypeScript
-- React Router
-- i18next (bilingual support)
+```bash
+cp server/.env.example server/.env
+```
 
 ## License
 
