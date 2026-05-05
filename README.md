@@ -1,4 +1,4 @@
-# Services Marketplace Platform
+# Services Marketplace Platform (WIP)
 
 A bilingual web platform connecting service providers (plumbers, electricians, locksmiths) with customers who need their services, featuring admin-approved provider registrations, rich provider profiles, in-app messaging, and a commission-based business model.
 
