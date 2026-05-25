@@ -78,11 +78,38 @@ export class AuthService {
       throw new Error('Invalid email or password');
     }
 
+    // Check if user is locked out
+    if (userWithPassword.lockoutUntil && userWithPassword.lockoutUntil > new Date()) {
+      throw new Error('Account is temporarily locked. Please try again later.');
+    }
+
     // Verify password
     const isPasswordValid = await bcrypt.compare(input.password, userWithPassword.passwordHash);
 
     if (!isPasswordValid) {
+      const attempts = userWithPassword.loginAttempts + 1;
+      const lockoutUntil = attempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null;
+
+      await prisma.user.update({
+        where: { id: userWithPassword.id },
+        data: {
+          loginAttempts: attempts,
+          lockoutUntil,
+        },
+      });
+
       throw new Error('Invalid email or password');
+    }
+
+    // If successful, reset login attempts and lockout status
+    if (userWithPassword.loginAttempts > 0 || userWithPassword.lockoutUntil) {
+      await prisma.user.update({
+        where: { id: userWithPassword.id },
+        data: {
+          loginAttempts: 0,
+          lockoutUntil: null,
+        },
+      });
     }
 
     // Generate JWT token

@@ -8,12 +8,10 @@ import { Prisma } from '@prisma/client';
  */
 export const errorHandler = (
   err: any,
-  req: Request,
+  _req: Request,
   res: Response,
   _next: NextFunction
 ) => {
-  const t = (req as any).t || ((key: string) => key);
-
   console.error('🔴 Error Details:', {
     message: err.message,
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
@@ -25,7 +23,7 @@ export const errorHandler = (
   let response = {
     error: {
       code: 'INTERNAL_ERROR',
-      message: t('common.error'),
+      message: 'Ha ocurrido un error inesperado',
       ...(process.env.NODE_ENV === 'development' && { details: err.message }),
     },
   };
@@ -36,7 +34,7 @@ export const errorHandler = (
     response = {
       error: {
         code: 'VALIDATION_ERROR',
-        message: t('validation.invalid_input'),
+        message: 'Error de validación en los datos de entrada',
         details: err.errors.map(e => ({
           path: e.path.join('.'),
           message: e.message
@@ -53,7 +51,7 @@ export const errorHandler = (
       response = {
         error: {
           code: 'CONFLICT',
-          message: t('common.conflict'),
+          message: 'Ya existe un registro con esta información',
           details: `Field: ${err.meta?.target}` as any,
         },
       };
@@ -64,7 +62,7 @@ export const errorHandler = (
       response = {
         error: {
           code: 'NOT_FOUND',
-          message: t('common.not_found'),
+          message: 'El registro solicitado no fue encontrado',
         },
       };
     }
@@ -75,7 +73,7 @@ export const errorHandler = (
     statusCode = 400;
     response.error = {
       code: 'BAD_REQUEST',
-      message: t('auth.email_already_registered'),
+      message: 'El correo electrónico ya está registrado',
     };
   }
 
@@ -83,27 +81,35 @@ export const errorHandler = (
     statusCode = 401;
     response.error = {
       code: 'UNAUTHORIZED',
-      message: t('auth.invalid_credentials'),
+      message: 'Correo electrónico o contraseña incorrectos',
+    };
+  }
+
+  if (err.message === 'Account is temporarily locked. Please try again later.') {
+    statusCode = 403;
+    response.error = {
+      code: 'FORBIDDEN',
+      message: 'Cuenta bloqueada temporalmente por intentos fallidos. Intente de nuevo más tarde.',
     };
   }
 
   const errorMap: Record<string, string> = {
-    'Review already exists for this request': 'review.already_exists',
-    'Cannot send requests to this provider': 'request.cannot_send_to_provider',
-    'Provider is already approved': 'provider.already_approved',
-    'Can only review completed requests': 'review.only_completed',
-    'Can only complete accepted requests': 'request.only_accepted_can_complete',
-    'Only the customer can submit a review': 'review.only_customer',
-    'Not authorized to respond to this request': 'request.not_authorized_to_respond',
-    'Request already has a response': 'request.already_responded',
-    'Provider is already deactivated': 'provider.already_deactivated',
+    'Review already exists for this request': 'Ya existe una reseña para esta solicitud',
+    'Cannot send requests to this provider': 'No se pueden enviar solicitudes a este proveedor',
+    'Provider is already approved': 'El proveedor ya está aprobado',
+    'Can only review completed requests': 'Solo se pueden calificar solicitudes completadas',
+    'Can only complete accepted requests': 'Solo se pueden completar solicitudes aceptadas',
+    'Only the customer can submit a review': 'Solo el cliente puede enviar una reseña',
+    'Not authorized to respond to this request': 'No autorizado para responder a esta solicitud',
+    'Request already has a response': 'La solicitud ya tiene una respuesta',
+    'Provider is already deactivated': 'El proveedor ya está desactivado',
   };
 
   if (errorMap[err.message]) {
     statusCode = 400;
     response.error = {
       code: 'BAD_REQUEST',
-      message: t(errorMap[err.message]),
+      message: errorMap[err.message],
     };
   }
 

@@ -1,6 +1,6 @@
 # Services Marketplace Platform (WIP)
 
-A bilingual web platform connecting service providers (plumbers, electricians, locksmiths) with customers who need their services, featuring admin-approved provider registrations, rich provider profiles, in-app messaging, and a commission-based business model.
+A web platform connecting service providers (plumbers, electricians, locksmiths) with customers who need their services, featuring admin-approved provider registrations, rich provider profiles, in-app messaging, and a commission-based business model, standardized strictly on Spanish.
 
 ## Software Architecture
 
@@ -10,7 +10,7 @@ The Services Marketplace Platform (SMP) follows a **Monorepo** structure, housin
 
 The system is designed as a **Layered Monolith**. This choice balances development speed with structural clarity, allowing for a clean separation of concerns without the operational complexity of microservices.
 
-- **Frontend (Client):** A Single Page Application (SPA) built with React and TypeScript, focused on providing a responsive, bilingual user experience.
+- **Frontend (Client):** A Single Page Application (SPA) built with React and TypeScript, focused on providing a responsive user experience standardized in Spanish.
 - **Backend (Server):** A Node.js/Express API that manages business logic, authentication, and data persistence.
 - **Database:** A relational PostgreSQL database managed via Prisma ORM to ensure data integrity and type safety.
 
@@ -23,33 +23,110 @@ The system is designed as a **Layered Monolith**. This choice balances developme
 
 ### Diagrams (C4 Model)
 
-#### 1. System Context Diagram
-Describes how users interact with the platform.
+El diseño arquitectónico de la plataforma sigue el estándar internacional de documentación **C4 Model** (Contexto, Contenedores, Componentes y Código). Todo el flujo y las explicaciones están completamente en español.
+
+#### 1. Diagrama de Contexto del Sistema (Level 1)
+Representa cómo los diferentes actores y roles interactúan con la plataforma y cómo esta se apoya en servicios externos de infraestructura.
 
 ```mermaid
-graph TD
-    Customer((Customer)) -->|Browse & Request| SMP[Services Marketplace]
-    Provider((Provider)) -->|Register & Manage| SMP
-    Admin((Admin)) -->|Approve & Moderate| SMP
-    SMP -->|Store Data| DB[(PostgreSQL)]
+graph TB
+    subgraph Usuarios [Roles de Usuario]
+        Cliente["👥 Cliente (Usuario Final)<br>Busca proveedores, envía solicitudes y deja reseñas"]
+        Proveedor["🛠️ Proveedor de Servicios<br>Crea perfil, sube portafolio y atiende solicitudes"]
+        Admin["👑 Administrador del Sistema<br>Modera proveedores, gestiona categorías y tarifas"]
+    end
+
+    SMP["💻 Services Marketplace Platform (SMP)<br>Monolito principal que procesa la lógica de negocio y expone la API REST"]
+
+    subgraph Sistemas_Externos [Infraestructura & Servicios Externos]
+        SMTP["📧 Servidor SMTP (Correo)<br>Gestiona notificaciones por email de seguridad y registro"]
+    end
+
+    Cliente -->|Usa la plataforma para buscar e interactuar| SMP
+    Proveedor -->|Gestiona perfil y atiende solicitudes| SMP
+    Admin -->|Aprueba registros y gestiona categorías| SMP
+
+    SMP -->|Envía correos electrónicos| SMTP
 ```
 
-#### 2. Component Diagram (Backend)
-Describes the internal layers of the Server.
+#### 2. Diagrama de Contenedores (Level 2)
+Detalla los contenedores de software que componen la base de código del monorepo, los límites físicos de ejecución (Docker Compose) y los protocolos de comunicación.
 
 ```mermaid
-graph TD
-    Client[React Client] -->|HTTP/REST| Routes[Express Routes]
-    Routes --> Middleware[Auth & Validation Middleware]
-    Middleware --> Controllers[Controllers]
-    Controllers --> Services[Business Logic Services]
-    Services --> Prisma[Prisma ORM]
-    Prisma --> DB[(PostgreSQL)]
+graph TB
+    subgraph Cliente_Navegador [Entorno del Navegador]
+        ClienteReact["⚛️ Cliente Web (React SPA)<br>Interfaz de usuario SPA construida con React y TypeScript, compilada vía Vite 6. Servida en español."]
+    end
+
+    subgraph Plataforma_Contenedores [Ecosistema del Servidor (Docker Compose)]
+        ServidorAPI["⚙️ Servidor API (Express / Node.js)<br>Monolito por capas escrito en TypeScript que gestiona la lógica de negocio y JWT."]
+        BaseDatos["🗄️ Base de Datos Relacional (PostgreSQL)<br>Almacena la información de usuarios, perfiles, solicitudes, reseñas, notificaciones y mensajes."]
+    end
+
+    ClienteReact -->|Llamadas HTTP/REST con cookies HTTP-only JWT en puerto 4000| ServidorAPI
+    ServidorAPI -->|Consultas y Escrituras vía Prisma ORM en puerto 5432| BaseDatos
+```
+
+#### 3. Diagrama de Componentes del Backend (Level 3)
+Muestra la organización interna de componentes y capas dentro del contenedor del **Servidor API (Express / Node.js)**.
+
+```mermaid
+graph TB
+    ClienteReact["⚛️ Cliente React (SPA)"]
+
+    subgraph Backend_SMP [Componentes Internos del Servidor API]
+        Rutas["🛣️ Rutas (Express Router)<br>Define endpoints y enruta solicitudes HTTP."]
+        
+        subgraph Filtros_Seguridad [Capa de Middlewares]
+            RateLimiter["🛑 Rate Limiters<br>Protege endpoints contra abusos (auth, mensajes)."]
+            AuthMiddleware["🔑 Auth & Roles Middleware<br>Verifica tokens JWT en cookies HTTP-only y valida roles de usuario."]
+            ValidatorZod["📋 Validator Middleware (Zod)<br>Sanea y valida esquemas de datos entrantes."]
+        end
+        
+        subgraph Controladores_SMP [Capa de Controladores]
+            AuthController["👤 Auth Controller<br>Gestiona registro, login y logout."]
+            ProviderController["🛠️ Provider Controller<br>Gestiona perfiles, portafolio y búsquedas."]
+            AdminController["👑 Admin Controller<br>Gestiona aprobaciones, desactivaciones y categorías."]
+            RequestController["📝 Request Controller<br>Gestiona flujo de solicitudes y estados."]
+            ReviewController["⭐ Review Controller<br>Gestiona calificaciones y comentarios."]
+            MessageController["💬 Message Controller<br>Gestiona chat y notificaciones."]
+        end
+        
+        subgraph Servicios_Negocio [Capa de Servicios de Lógica de Negocio]
+            AuthService["🔑 Auth Service<br>Cifrado bcrypt de contraseñas y gestión de JWT."]
+            ProviderService["🛠️ Provider Service<br>Lógica de perfiles y búsqueda con filtros."]
+            AdminService["👑 Admin Service<br>Flujos de aprobaciones de proveedores y auditorías."]
+            RequestService["📝 Request Service<br>Control de estados de solicitudes y notificaciones."]
+            ReviewService["⭐ Review Service<br>Cálculo matemático de reputación y promedios."]
+            MessageService["💬 Message Service<br>Manejo de mensajería y persistencia de alertas."]
+        end
+        
+        PrismaORM["💾 Prisma ORM (Client)<br>Capa relacional type-safe generada a partir de schema.prisma."]
+    end
+
+    BaseDatos[("🗄️ PostgreSQL Database")]
+
+    ClienteReact -->|1. Petición HTTP/REST| Rutas
+    Rutas -->|2. Filtra y Valida| RateLimiter
+    RateLimiter --> AuthMiddleware
+    AuthMiddleware --> ValidatorZod
+    
+    ValidatorZod -->|3. Procesa HTTP| Controladores_SMP
+    
+    AuthController --> AuthService
+    ProviderController --> ProviderService
+    AdminController --> AdminService
+    RequestController --> RequestService
+    ReviewController --> ReviewService
+    MessageController --> MessageService
+    
+    Servicios_Negocio -->|4. Ejecuta Query| PrismaORM
+    PrismaORM -->|5. SQL Query| BaseDatos
 ```
 
 ## Tech Stack
 
-- **Frontend:** React 19, TypeScript, **Vite 6** (Build Tool & Dev Server), Tailwind CSS, i18next (Bilingual), React Router 7.
+- **Frontend:** React 19, TypeScript, **Vite 6** (Build Tool & Dev Server), Tailwind CSS, React Router 7.
 - **Backend:** Node.js 24, Express, TypeScript, Prisma ORM, JWT.
 - **Database:** PostgreSQL 14 (Dockerized).
 - **DevOps:** Docker, Docker Compose.

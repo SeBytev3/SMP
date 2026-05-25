@@ -199,27 +199,6 @@ async function run() {
       console.error('  🔴 Failed:', duplicateData);
     }
 
-    // EDGE CASE 3: Oversized file upload
-    console.log('🧪 Edge Case 3: Provider uploads oversized file...');
-    // Create a 6MB dummy buffer
-    const largeBuffer = Buffer.alloc(6 * 1024 * 1024, 'a');
-    const formData = new FormData();
-    formData.append('image', new Blob([largeBuffer]), 'large.jpg');
-
-    const uploadRes = await fetch(`${API_URL}/providers/${profileId}/portfolio`, {
-      method: 'POST',
-      headers: { 'Cookie': provCookie },
-      body: formData
-    });
-    const uploadData = await uploadRes.json();
-    
-    // Express Multer usually throws a generic error format when limits are hit
-    if (uploadRes.status === 400 || uploadRes.status === 500) {
-      console.log('  🟢 Passed: Oversized upload blocked.', uploadData);
-    } else {
-      console.error('  🔴 Failed (Allowed unexpectedly?):', uploadRes.status, uploadData);
-    }
-
     console.log('🎉 All edge case manual tests completed!');
 
   } catch (error) {

@@ -100,7 +100,7 @@ const MyRequests: React.FC = () => {
       }
       await fetchRequests();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Error al procesar la acción');
+      alert(err.response?.data?.error?.message || err.response?.data?.message || 'Error al procesar la acción');
     } finally {
       setActionLoading(null);
     }

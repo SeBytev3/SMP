@@ -52,7 +52,7 @@ const AdminDashboard: React.FC = () => {
       await api.patch(`/admin/providers/${id}/approve`);
       setPendingProviders((prev) => prev.filter((p) => p.id !== id));
     } catch (err: any) {
-      alert('Error al aprobar al proveedor');
+      alert(err.response?.data?.error?.message || err.response?.data?.message || 'Error al aprobar al proveedor');
     } finally {
       setActionLoading(null);
     }
@@ -75,7 +75,7 @@ const AdminDashboard: React.FC = () => {
       setPendingProviders((prev) => prev.filter((p) => p.id !== rejectingId));
       setShowRejectModal(false);
     } catch (err: any) {
-      alert('Error al rechazar al proveedor');
+      alert(err.response?.data?.error?.message || err.response?.data?.message || 'Error al rechazar al proveedor');
     } finally {
       setActionLoading(null);
       setRejectingId(null);

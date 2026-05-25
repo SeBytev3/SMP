@@ -194,9 +194,8 @@ Navigate to: **`http://localhost:4000/api-docs`**
 ```text
 server/
 ├── src/
-│   ├── config/         # DB, environment, i18n, swagger configuration
+│   ├── config/         # DB, environment, and swagger configuration
 │   ├── controllers/    # Express route handlers
-│   ├── locales/        # i18n JSON files (en, es)
 │   ├── middleware/     # Auth, Validation, Error Handling, Rate Limiting
 │   ├── routes/         # Express router definitions
 │   ├── services/       # Core business logic

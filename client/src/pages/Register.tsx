@@ -38,7 +38,7 @@ const Register: React.FC = () => {
         const messages = details.map((d: any) => d.message).join('. ');
         setError(messages);
       } else {
-        setError(err.response?.data?.message || 'Error al crear la cuenta. Revisa los datos.');
+        setError(err.response?.data?.error?.message || err.response?.data?.message || 'Error al crear la cuenta. Revisa los datos.');
       }
     } finally {
       setLoading(false);

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "A bilingual web platform connecting service providers (plumbers, electricians, locksmiths) with customers",
   "private": true,
+  "packageManager": "npm@11.15.0",
   "workspaces": [
     "server",
     "client"
@@ -28,15 +29,33 @@
     "prettier": "^3.8.2"
   },
   "overrides": {
-    "@hono/node-server": "^1.19.14",
+    "@hono/node-server": "1.19.14",
+    "hono": "4.12.21",
+    "brace-expansion": "^5.0.6",
     "multer": "^2.1.1",
-    "i18next-http-middleware": "^3.9.6",
-    "i18next-fs-backend": "^2.6.5",
     "uuid": "^14.0.0",
     "glob": "^13.0.6",
     "inflight": "npm:once@^1.4.0",
     "lodash.isequal": "^4.5.0",
-    "lodash.get": "^4.4.2"
+    "lodash.get": "^4.4.2",
+    "swagger-jsdoc": {
+      "glob": "^7.2.3"
+    },
+    "server": {
+      "@hono/node-server": "1.19.14",
+      "hono": "4.12.21",
+      "glob": "^7.2.3",
+      "@prisma/dev": {
+        "@hono/node-server": "1.19.14",
+        "hono": "4.12.21"
+      },
+      "prisma": {
+        "@prisma/dev": {
+          "@hono/node-server": "1.19.14",
+          "hono": "4.12.21"
+        }
+      }
+    }
   },
   "engines": {
     "node": ">=18.0.0",

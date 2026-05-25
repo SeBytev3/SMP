@@ -1,6 +1,7 @@
 import { prismaMock } from '../prisma.mock';
 import { authService } from '../../src/services/auth.service';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
 // Mock bcrypt
 jest.mock('bcrypt', () => ({
@@ -25,6 +26,7 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     process.env.JWT_SECRET = 'secret';
+    jest.clearAllMocks();
   });
 
   describe('register', () => {
@@ -45,9 +47,95 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('should return user and token', async () => {
-      prismaMock.user.findUnique.mockResolvedValue({ id: 'u1', passwordHash: 'hash', languagePref: 'es' } as any);
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        passwordHash: 'hash',
+        languagePref: 'es',
+        loginAttempts: 0,
+        lockoutUntil: null,
+      } as any);
       const result = await authService.login({ email: 'test@test.com', password: 'password' });
       expect(result.token).toBe('token');
+    });
+
+    it('should throw if user is locked out', async () => {
+      const futureDate = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes in future
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        passwordHash: 'hash',
+        languagePref: 'es',
+        loginAttempts: 5,
+        lockoutUntil: futureDate,
+      } as any);
+
+      await expect(
+        authService.login({ email: 'test@test.com', password: 'password' })
+      ).rejects.toThrow('Account is temporarily locked. Please try again later.');
+    });
+
+    it('should allow login if lockout has expired and reset attempts', async () => {
+      const pastDate = new Date(Date.now() - 10 * 60 * 1000); // 10 minutes in past
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        passwordHash: 'hash',
+        languagePref: 'es',
+        loginAttempts: 5,
+        lockoutUntil: pastDate,
+      } as any);
+      (bcrypt.compare as jest.Mock).mockResolvedValueOnce(true);
+      prismaMock.user.update.mockResolvedValue({} as any);
+
+      const result = await authService.login({ email: 'test@test.com', password: 'password' });
+      expect(result.token).toBe('token');
+      expect(prismaMock.user.update).toHaveBeenCalledWith({
+        where: { id: 'u1' },
+        data: { loginAttempts: 0, lockoutUntil: null },
+      });
+    });
+
+    it('should increment attempts on failed password', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        passwordHash: 'hash',
+        languagePref: 'es',
+        loginAttempts: 2,
+        lockoutUntil: null,
+      } as any);
+      (bcrypt.compare as jest.Mock).mockResolvedValueOnce(false);
+      prismaMock.user.update.mockResolvedValue({} as any);
+
+      await expect(
+        authService.login({ email: 'test@test.com', password: 'wrong' })
+      ).rejects.toThrow('Invalid email or password');
+
+      expect(prismaMock.user.update).toHaveBeenCalledWith({
+        where: { id: 'u1' },
+        data: { loginAttempts: 3, lockoutUntil: null },
+      });
+    });
+
+    it('should trigger lockout when failed attempts reach 5', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        passwordHash: 'hash',
+        languagePref: 'es',
+        loginAttempts: 4,
+        lockoutUntil: null,
+      } as any);
+      (bcrypt.compare as jest.Mock).mockResolvedValueOnce(false);
+      prismaMock.user.update.mockResolvedValue({} as any);
+
+      await expect(
+        authService.login({ email: 'test@test.com', password: 'wrong' })
+      ).rejects.toThrow('Invalid email or password');
+
+      expect(prismaMock.user.update).toHaveBeenCalledWith({
+        where: { id: 'u1' },
+        data: {
+          loginAttempts: 5,
+          lockoutUntil: expect.any(Date),
+        },
+      });
     });
   });
 

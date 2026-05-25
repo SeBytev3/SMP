@@ -2,7 +2,7 @@
 FROM node:24-alpine AS builder
 
 # Enable corepack and use latest npm
-RUN corepack enable && corepack prepare npm@11.13.0 --activate && npm install -g npm@11.13.0
+RUN corepack enable && corepack prepare npm@11.15.0 --activate && npm install -g npm@11.15.0
 
 # Install system dependencies
 RUN apk add --no-cache libc6-compat
@@ -25,7 +25,7 @@ RUN npm run build
 FROM node:24-alpine
 
 # Enable corepack and use latest npm
-RUN corepack enable && corepack prepare npm@11.13.0 --activate && npm install -g npm@11.13.0
+RUN corepack enable && corepack prepare npm@11.15.0 --activate && npm install -g npm@11.15.0
 
 WORKDIR /app
 

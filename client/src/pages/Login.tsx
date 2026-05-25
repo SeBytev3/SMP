@@ -22,7 +22,7 @@ const Login: React.FC = () => {
       login(response.data.user);
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al iniciar sesión');
+      setError(err.response?.data?.error?.message || err.response?.data?.message || 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }

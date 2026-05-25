@@ -33,7 +33,7 @@ export class ProviderController {
 
       res.status(201).json({
         profile,
-        message: (req as any).t('provider.registration_submitted'),
+        message: 'Registro de proveedor enviado. Esperando aprobación administrativa.',
       });
     } catch (error) {
       next(error);
@@ -58,7 +58,7 @@ export class ProviderController {
         res.status(404).json({
           error: {
             code: 'NOT_FOUND',
-            message: (req as any).t('provider.profile_not_found'),
+            message: 'Perfil de proveedor no encontrado',
           },
         });
         return;
@@ -99,7 +99,7 @@ export class ProviderController {
 
       res.json({
         profile,
-        message: (req as any).t('provider.resubmitted'),
+        message: 'Perfil re-enviado para revisión.',
       });
     } catch (error) {
       next(error);

@@ -17,12 +17,12 @@ Build the complete backend API for the services marketplace platform, including 
 - In-app notification system
 - File upload service for portfolio images (S3-compatible storage)
 - Backend unit + integration tests
-- Spanish-only i18n infrastructure (English keys deferred)
+- Monolingual interface standardized strictly on Spanish
 - API documentation (OpenAPI/Swagger or Postman collection)
 
 **Out:**
 - OAuth social login (Google, Facebook) — Phase 2
-- English language translations — Phase 2
+- English language translations — Removed/Deprecated (Standardized on Spanish)
 - Frontend React application — Separate phase
 - Payment gateway integration — Future phase
 - Map/GPS visualization — Future phase
@@ -85,7 +85,7 @@ Build the complete backend API for the services marketplace platform, including 
 
 - [x] Implement `GET /api/categories` — list active categories (public)
 - [x] Implement admin endpoints: `POST /api/admin/categories`, `PATCH /api/admin/categories/:id`, `GET /api/admin/categories`
-- [x] Add category validation (bilingual names required)
+- [x] Add category validation (name and description default to Spanish)
 - [x] Write tests for category CRUD
 
 ### 5. Provider Registration & Profile Management
@@ -162,14 +162,12 @@ Build the complete backend API for the services marketplace platform, including 
 - [x] Add request logging middleware (method, path, status, duration)
 - [x] Write tests for error responses, validation failures, rate limit trigger
 
-### 13. Internationalization Infrastructure
+### 13. Spanish Monolingual Standardization (i18n Removed)
 
-- [x] Set up i18n framework (i18next or custom translation service)
-- [x] Create Spanish translation keys file (`locales/es.json`)
-- [x] Create English translation keys file (`locales/en.json`) with Spanish values as placeholder
-- [x] Integrate language preference from `Users.language_pref` field
-- [x] Translate all notification messages, error responses, and category names
-- [x] Write tests for language switching, missing key fallback
+- [x] Remove dynamic i18n framework (i18next) to simplify codebase and avoid third-party sub-dependencies
+- [x] Standardize all error responses, controllers, and notification generators strictly in Spanish literals
+- [x] Map database localization fields directly to Spanish properties to preserve client-side compatibility
+- [x] Delete locales translation directories and clean up package dependencies
 
 ### 14. API Documentation
 
@@ -184,7 +182,7 @@ Build the complete backend API for the services marketplace platform, including 
 **Unit Tests (Services):**
 - [x] Unit tests for `AuthService`
 - [x] Unit tests for `ReviewService`
-- [x] Unit tests for `i18n` infrastructure
+- [x] Clean up test suites to remove obsolete i18n mocks and obsolete i18n tests
 - [x] Unit tests for `CategoryService`
 - [x] Unit tests for `ProviderService`
 - [x] Unit tests for `AdminService`
@@ -243,10 +241,9 @@ Build the complete backend API for the services marketplace platform, including 
 - [ ] Implement EmailService to wrap sending logic
 - [ ] Integrate EmailService into existing notification triggers
 
-### 19. Full English Translation (i18n)
-- [x] Populate `src/locales/en/common.json` with accurate English translations
-- [x] Verify all error messages and notifications have En/Es counterparts
-- [x] Test language switching via `Users.language_pref` and JWT `lng` field
+### 19. Full English Translation (i18n) [DEPRECATED]
+- [x] Deprecate English translation files and remove bilingual toggle logic
+- [x] Ensure seamless client execution standardizing purely on Spanish language context
 
 ### 20. Frontend Initialization (React + TypeScript)
 - [x] Initialize React project using Vite in `client/` directory
@@ -268,5 +265,5 @@ Build the complete backend API for the services marketplace platform, including 
 > **Q: Which OAuth providers for v1?**
 > **A: Defer OAuth to Phase 2** — email/password authentication only in v1.
 
-> **Q: Should bilingual support be built from the start?**
-> **A: Spanish first, English later** — i18n infrastructure in place, but only Spanish keys populated in Phase 1.
+> **Q: Should bilingual support be built or standard monolingual?**
+> **A: Standardize strictly on Spanish** — Dynamic internationalization (i18n) was completely removed to simplify code architecture, eliminate runtime dynamic translation overhead, and tailor the experience exclusively in Spanish.

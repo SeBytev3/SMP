@@ -1,6 +1,6 @@
 # Spec: Services Marketplace Platform
 
-A bilingual web platform connecting service providers (plumbers, electricians, locksmiths) with customers who need their services, featuring admin-approved provider registrations, rich provider profiles, in-app messaging, and a commission-based business model.
+A web platform connecting service providers (plumbers, electricians, locksmiths) with customers who need their services, featuring admin-approved provider registrations, rich provider profiles, in-app messaging, and a commission-based business model, standardized strictly on Spanish.
 
 ## Background
 
@@ -23,7 +23,7 @@ A bilingual web platform connecting service providers (plumbers, electricians, l
 - Provide in-app messaging for provider-customer communication
 - Support service request workflow (customer sends request → provider accepts/declines)
 - Enable extensible service category management (admin can add new categories)
-- Support bilingual interface (Spanish/English) with auto-detection and manual override
+- Support interface standardized on Spanish
 
 ## Non-Goals
 
@@ -45,7 +45,7 @@ A bilingual web platform connecting service providers (plumbers, electricians, l
 - **Database**: PostgreSQL for relational data (users, services, reviews, requests, messages)
 - **Authentication**: JWT in HTTP-only cookies + OAuth 2.0 for social login (Google, Facebook)
 - **File Storage**: Cloud storage (AWS S3 or equivalent) for provider portfolio images
-- **Internationalization**: `react-intl` or `i18next` for bilingual support (Spanish/English)
+- **Internationalization**: None (Standardized strictly on Spanish)
 
 **Key Components**:
 
@@ -521,7 +521,7 @@ Admin (authenticated):
 
 **Manual Testing**:
 - Responsive design across mobile (320px), tablet (768px), desktop (1024px+)
-- Language toggle (Spanish/English) on all pages
+- Verification of correct Spanish grammar and localization consistency on all pages
 - Accessibility audit (keyboard navigation, screen reader compatibility)
 - Image upload edge cases (wrong format, oversized, corrupted files)
 - Concurrent admin approvals (race condition testing)
@@ -543,8 +543,8 @@ Admin (authenticated):
 - [ ] Admins can add new service categories
 - [ ] Admins can soft-deactivate providers
 - [ ] Rejected providers can edit and resubmit applications
-- [ ] Interface switches between Spanish and English
-- [ ] Language auto-detected from browser with manual override
+- [ ] Interface completely and consistently in Spanish
+- [ ] Removed all dynamic internationalization (i18n) layers to optimize codebase size and simplicity
 - [ ] In-app notifications for key events (approval, messages, requests, reviews)
 
 **Performance**:
@@ -570,41 +570,38 @@ Admin (authenticated):
 
 ## Decisions Log
 
-> **Q: Which technology stack?**
-> **A: React + Node.js + PostgreSQL** — Full-stack JavaScript ecosystem with strong community support, TypeScript for type safety, and relational data modeling that fits the domain well. Team familiarity and hiring pool also favor this choice.
+Las decisiones clave de la arquitectura de la Plataforma de Servicios (SMP) se encuentran documentadas formalmente bajo el estándar ADR (Registro de Decisiones de Arquitectura) en el directorio de documentación global. A continuación se detallan las decisiones principales y sus enlaces a los registros detallados:
 
-> **Q: Authentication approach?**
-> **A: Email/password + OAuth (Google, Facebook)** — Maximizes accessibility for users who prefer quick social login while supporting traditional email/password for those without accounts or who prefer it. JWT in HTTP-only cookies for security.
+### 📑 Registros Oficiales de Decisiones de Arquitectura (ADR)
 
-> **Q: Provider registration workflow?**
-> **A: Immediate pending status, admin reviews and approves/rejects with optional reason** — Ensures quality control and trust in the marketplace. Providers can edit and resubmit if rejected, creating a feedback loop.
+1. **[ADR 0001: Arquitectura Monorepo con Workspaces de npm](../../docs/adr/0001-monorepo-workspaces.md)**
+   * **Decisión:** Agrupar los proyectos de frontend (`client`) y backend (`server`) bajo un único repositorio administrado mediante los workspaces de npm y coordinados mediante Docker Compose.
+   * **Objetivo:** Minimizar la fricción de integración continua, unificar las configuraciones de linter/tipos y simplificar el despliegue local a un solo comando.
 
-> **Q: How should customers contact providers?**
-> **A: In-app messaging system only** — Protects user privacy, keeps communication on-platform for moderation and record-keeping, and builds engagement. Direct contact info deferred to prevent off-platform transactions.
+2. **[ADR 0002: Estilo Arquitectónico: Monolito por Capas](../../docs/adr/0002-layered-monolith.md)**
+   * **Decisión:** Estructurar el servidor API bajo el patrón de Monolito por Capas (Routes -> Middlewares -> Controllers -> Services -> Data).
+   * **Objetivo:** Maximizar la velocidad de iteración del equipo, mantener transacciones ACID inmediatas en PostgreSQL y simplificar la migración futura a microservicios independientes si la carga lo requiere.
 
-> **Q: Rating and review system?**
-> **A: Star ratings (1-5) + written reviews** — Combines quick quantitative signal (average rating) with qualitative feedback. Only allowed for completed service requests to prevent fake reviews.
+3. **[ADR 0003: Base de Datos Relacional con Prisma ORM](../../docs/adr/0003-relational-database-prisma.md)**
+   * **Decisión:** Implementar PostgreSQL como motor de persistencia relacional primario e interactuar mediante Prisma ORM.
+   * **Objetivo:** Garantizar la integridad referencial a nivel nativo de base de datos y obtener tipado estático completo de extremo a extremo en las consultas del backend.
 
-> **Q: Booking/scheduling complexity?**
-> **A: Simple request/accept workflow in v1** — Full calendar integration is complex and requires provider availability management. Simple workflow validated the concept first; can iterate later.
+4. **[ADR 0004: Estandarización Monolingüe en Español (Remoción de i18n)](../../docs/adr/0004-spanish-monolingual-standard.md)**
+   * **Decisión:** Remover la biblioteca `i18next` y las capas dinámicas de traducción para estandarizar estrictamente todo el sistema en español.
+   * **Objetivo:** Eliminar dependencias de compilación redundantes, optimizar el rendimiento y el tamaño de los bundles de producción, y enfocar el producto en el mercado principal hispanohablante (Colombia).
 
-> **Q: Location handling?**
-> **A: Text-based (city/region) with optional map visualization** — Avoids GPS permission requirements and battery drain. Map can be added later for visual browsing without being core to functionality.
+5. **[ADR 0005: Despliegue con Cero Intervención usando Docker Compose](../../docs/adr/0005-zero-intervention-docker-deployment.md)**
+   * **Decisión:** Contenerizar todos los servicios de la plataforma usando Docker Compose bajo una premisa de aislamiento total del host.
+   * **Objetivo:** Garantizar un arranque limpio del entorno local ejecutando únicamente `docker-compose up --build -d`, sin importar el sistema operativo host.
 
-> **Q: Provider profiles—basic or rich?**
-> **A: Rich profiles with portfolio, bio, certifications, availability** — Differentiates this platform from simple directories. Portfolio images build trust and showcase quality of work.
+6. **[ADR 0006: Almacenamiento Seguro de JWT en Cookies HTTP-only](../../docs/adr/0006-secure-cookie-jwt-auth.md)**
+   * **Decisión:** Firmar y persistir los tokens JSON Web Tokens (JWT) de autenticación dentro de cookies HTTP-only con atributos Secure y SameSite=Strict.
+   * **Objetivo:** Blindar la sesión de usuario contra accesos indebidos e inyecciones JavaScript (XSS), mitigando de forma nativa riesgos de secuestro de sesión (CSRF).
 
-> **Q: Bilingual support approach?**
-> **A: Auto-detect from browser with manual override** — Respects user preference while reducing friction. Translation keys stored in JSON files for easy updates.
+7. **[ADR 0007: Flujo del Ciclo de Vida del Proveedor Controlado por Estado](../../docs/adr/0007-stateful-provider-moderation.md)**
+   * **Decisión:** Establecer una máquina de estados finita (`pending`, `approved`, `rejected`, `deactivated`) para moderar los perfiles de los proveedores.
+   * **Objetivo:** Asegurar que todos los profesionales que aparecen en las búsquedas públicas estén validados por administradores, protegiendo la confianza de la plataforma.
 
-> **Q: Commission-based pricing—how to track?**
-> **A: Commission rate stored per provider, calculated on request completion** — Flexible (can set platform default or custom rates). Actual billing/collection deferred; v1 only tracks the rate for future invoicing.
+---
 
-> **Q: Multiple admins or single admin?**
-> **A: Multiple admins with same permissions** — Reduces bottleneck and allows team collaboration. Audit log tracks who did what. Role hierarchy deferred until needed.
-
-> **Q: Admin can deactivate providers—soft or hard delete?**
-> **A: Soft deactivation** — Preserves data (reviews, messages, requests) and allows reactivation. Hard delete would lose historical context and break referential integrity.
-
-> **Q: Service categories extensible?**
-> **A: Yes, admin-managed with hybrid suggestion** — Start with 3 (plumber, electrician, locksmith) but allow admin to add new ones as market demands evolve. Providers can suggest via support channel.
+*Nota: Para más detalles de implementación técnica y planes de despliegue históricos, consulte el archivo de planificación global [PLAN.md](PLAN.md).*

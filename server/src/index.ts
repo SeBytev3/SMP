@@ -7,9 +7,9 @@ import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
 import { validateEnv } from './config/env';
-import i18next, { i18nMiddleware } from './config/i18n';
+
 import { errorHandler } from './middleware/error-handler';
-import { requestLogger } from './middleware/rate-limit';
+import { requestLogger, globalRateLimiter } from './middleware/rate-limit';
 
 // Routes
 import authRoutes from './routes/auth.routes';
@@ -20,7 +20,6 @@ import requestRoutes from './routes/request.routes';
 import reviewRoutes from './routes/review.routes';
 import messageRoutes from './routes/message.routes';
 import notificationRoutes from './routes/notification.routes';
-import uploadRoutes from './routes/upload.routes';
 
 // Load environment variables before validating
 dotenv.config();
@@ -47,7 +46,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(i18nMiddleware.handle(i18next));
+
 
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(process.cwd(), UPLOAD_DIR)));
@@ -70,6 +69,7 @@ app.get('/', (_req, res) => {
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // API routes
+app.use('/api', globalRateLimiter);
 app.use('/api', authRoutes);
 app.use('/api', categoryRoutes);
 app.use('/api', providerRoutes);
@@ -78,7 +78,6 @@ app.use('/api', requestRoutes);
 app.use('/api', reviewRoutes);
 app.use('/api', messageRoutes);
 app.use('/api', notificationRoutes);
-app.use('/api', uploadRoutes);
 
 // Global error handler (Must be after all routes)
 app.use(errorHandler);

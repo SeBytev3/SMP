@@ -1,7 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { notificationService } from '../services/notification.service';
 import { AuthRequest } from '../middleware/auth';
-import { localizeArray } from '../utils/i18n-utils';
 
 class NotificationController {
   async getNotifications(req: AuthRequest, res: Response, next: NextFunction) {
@@ -10,9 +9,16 @@ class NotificationController {
       const unreadOnly = req.query.unread === 'true';
 
       const notifications = await notificationService.getNotifications(userId, unreadOnly);
-      const lng = (req as any).language || 'es';
 
-      res.json(localizeArray(notifications, lng, ['message']));
+      const formatted = notifications.map(n => {
+        const { messageEs, messageEn, ...rest } = n;
+        return {
+          ...rest,
+          message: messageEs,
+        };
+      });
+
+      res.json(formatted);
     } catch (error) {
       next(error);
     }

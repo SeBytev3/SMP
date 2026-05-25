@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authController } from '../controllers/auth.controller';
 import { validate } from '../middleware/validation';
-import { authRateLimiter } from '../middleware/rate-limit';
+import { authRateLimiter, emailRateLimiter } from '../middleware/rate-limit';
 import { registerSchema, loginSchema } from '../utils/validators/auth.validator';
 import { requireAuth } from '../middleware/auth';
 
@@ -42,6 +42,7 @@ const router = Router();
 router.post(
   '/auth/register', 
   authRateLimiter,
+  emailRateLimiter,
   validate(registerSchema), 
   authController.register
 );
@@ -80,6 +81,7 @@ router.post(
 router.post(
   '/auth/login', 
   authRateLimiter,
+  emailRateLimiter,
   validate(loginSchema), 
   authController.login
 );

@@ -1,20 +1,27 @@
 import { Request, Response, NextFunction } from 'express';
 import { categoryService } from '../services/category.service';
 import { AuthRequest } from '../middleware/auth';
-import { localizeArray } from '../utils/i18n-utils';
 
 export class CategoryController {
   /**
    * GET /api/categories
    * List active categories (public)
    */
-  async listActive(req: Request, res: Response, next: NextFunction) {
+  async listActive(_req: Request, res: Response, next: NextFunction) {
     try {
       const categories = await categoryService.listActive();
-      const lng = (req as any).language || req.headers['accept-language']?.slice(0, 2) || 'es';
       
+      const formatted = categories.map(c => {
+        const { nameEs, nameEn, descriptionEs, descriptionEn, ...rest } = c;
+        return {
+          ...rest,
+          name: nameEs,
+          description: descriptionEs,
+        };
+      });
+
       res.json({ 
-        categories: localizeArray(categories, lng, ['name', 'description']) 
+        categories: formatted 
       });
     } catch (error) {
       next(error);
@@ -25,13 +32,21 @@ export class CategoryController {
    * GET /api/admin/categories
    * List all categories including inactive (admin)
    */
-  async listAll(req: AuthRequest, res: Response, next: NextFunction) {
+  async listAll(_req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const categories = await categoryService.listAll();
-      const lng = (req as any).language || 'es';
+
+      const formatted = categories.map(c => {
+        const { nameEs, nameEn, descriptionEs, descriptionEn, ...rest } = c;
+        return {
+          ...rest,
+          name: nameEs,
+          description: descriptionEs,
+        };
+      });
 
       res.json({ 
-        categories: localizeArray(categories, lng, ['name', 'description']) 
+        categories: formatted 
       });
     } catch (error) {
       next(error);

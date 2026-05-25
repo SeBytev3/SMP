@@ -28,7 +28,7 @@ export class AdminController {
 
       res.json({
         profile,
-        message: (req as any).t('provider.approved'),
+        message: 'Proveedor aprobado exitosamente',
       });
     } catch (error) {
       next(error);
@@ -48,7 +48,7 @@ export class AdminController {
 
       res.json({
         profile,
-        message: (req as any).t('provider.rejected'),
+        message: 'Proveedor rechazado',
       });
     } catch (error) {
       next(error);
@@ -67,7 +67,7 @@ export class AdminController {
 
       res.json({
         profile,
-        message: (req as any).t('provider.deactivated'),
+        message: 'Proveedor desactivado',
       });
     } catch (error) {
       next(error);
@@ -87,7 +87,7 @@ export class AdminController {
 
       res.json({
         updated,
-        message: (req as any).t('provider.commission_updated'),
+        message: 'Tasa de comisión actualizada',
       });
     } catch (error) {
       next(error);

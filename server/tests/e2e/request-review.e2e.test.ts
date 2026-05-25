@@ -5,24 +5,6 @@ jest.mock('bcrypt', () => ({
   compare: jest.fn().mockResolvedValue(true),
 }));
 
-jest.mock('../../src/config/i18n', () => ({
-  __esModule: true,
-  default: {
-    t: (key: string) => key,
-    use: () => ({ init: () => {} }),
-    init: () => {},
-    changeLanguage: () => Promise.resolve(),
-    on: () => {},
-  },
-  i18nMiddleware: {
-    handle: () => (req: any, _res: any, next: any) => {
-      req.t = (key: string) => key;
-      req.language = 'es';
-      next();
-    },
-  },
-}));
-
 import request from 'supertest';
 import { app } from '../../src/index';
 

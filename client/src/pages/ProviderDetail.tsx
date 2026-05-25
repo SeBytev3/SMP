@@ -81,7 +81,7 @@ const ProviderDetail: React.FC = () => {
         setDescription('');
       }, 3000);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Error al enviar la solicitud');
+      alert(err.response?.data?.error?.message || err.response?.data?.message || 'Error al enviar la solicitud');
     } finally {
       setSubmitting(false);
     }

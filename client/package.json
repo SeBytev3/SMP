@@ -1,6 +1,7 @@
 {
   "name": "client",
   "private": true,
+  "packageManager": "npm@11.15.0",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -16,13 +17,9 @@
     "@tanstack/react-query": "^5.99.2",
     "axios": "^1.15.2",
     "clsx": "^2.1.1",
-    "i18next": "^24.2.3",
-    "i18next-browser-languagedetector": "^8.2.1",
-    "i18next-http-backend": "^3.0.6",
     "lucide-react": "^0.468.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "react-i18next": "^15.7.4",
     "react-router-dom": "^7.14.2",
     "tailwind-merge": "^2.6.1",
     "zod": "^3.25.76"
@@ -48,6 +45,7 @@
   },
   "overrides": {
     "glob": "^13.0.6",
-    "inflight": "npm:once@^1.4.0"
+    "inflight": "npm:once@^1.4.0",
+    "brace-expansion": "^5.0.6"
   }
 }
